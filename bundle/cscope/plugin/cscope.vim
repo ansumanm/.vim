@@ -1,344 +1,165 @@
-" vim: tabstop=2 shiftwidth=2 softtabstop=2 expandtab foldmethod=marker
-"    Copyright: Copyright (C) 2012-2015 Brook Hong
-"    License: The MIT License
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" CSCOPE settings for vim           
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "
+" This file contains some boilerplate settings for vim's cscope interface,
+" plus some keyboard mappings that I've found useful.
+"
+" USAGE: 
+" -- vim 6:     Stick this file in your ~/.vim/plugin directory (or in a
+"               'plugin' directory in some other directory that is in your
+"               'runtimepath'.
+"
+" -- vim 5:     Stick this file somewhere and 'source cscope.vim' it from
+"               your ~/.vimrc file (or cut and paste it into your .vimrc).
+"
+" NOTE: 
+" These key maps use multiple keystrokes (2 or 3 keys).  If you find that vim
+" keeps timing you out before you can complete them, try changing your timeout
+" settings, as explained below.
+"
+" Happy cscoping,
+"
+" Jason Duell       jduell@alumni.princeton.edu     2002/3/7
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-if !exists('g:cscope_silent')
-  let g:cscope_silent = 0
+
+" This tests to see if vim was configured with the '--enable-cscope' option
+" when it was compiled.  If it wasn't, time to recompile vim... 
+if has("cscope")
+
+    """"""""""""" Standard cscope/vim boilerplate
+
+    " use both cscope and ctag for 'ctrl-]', ':ta', and 'vim -t'
+    set cscopetag
+
+    " check cscope for definition of a symbol before checking ctags: set to 1
+    " if you want the reverse search order.
+    set csto=0
+
+    " add any cscope database in current directory
+    if filereadable("cscope.out")
+        cs add cscope.out  
+    " else add the database pointed to by environment variable 
+    elseif $CSCOPE_DB != ""
+        cs add $CSCOPE_DB
+    endif
+
+    " show msg when any other cscope db added
+    set cscopeverbose  
+
+
+    """"""""""""" My cscope/vim key mappings
+    "
+    " The following maps all invoke one of the following cscope search types:
+    "
+    "   's'   symbol: find all references to the token under cursor
+    "   'g'   global: find global definition(s) of the token under cursor
+    "   'c'   calls:  find all calls to the function name under cursor
+    "   't'   text:   find all instances of the text under cursor
+    "   'e'   egrep:  egrep search for the word under cursor
+    "   'f'   file:   open the filename under cursor
+    "   'i'   includes: find files that include the filename under cursor
+    "   'd'   called: find functions that function under cursor calls
+    "
+    " Below are three sets of the maps: one set that just jumps to your
+    " search result, one that splits the existing vim window horizontally and
+    " diplays your search result in the new window, and one that does the same
+    " thing, but does a vertical split instead (vim 6 only).
+    "
+    " I've used CTRL-\ and CTRL-@ as the starting keys for these maps, as it's
+    " unlikely that you need their default mappings (CTRL-\'s default use is
+    " as part of CTRL-\ CTRL-N typemap, which basically just does the same
+    " thing as hitting 'escape': CTRL-@ doesn't seem to have any default use).
+    " If you don't like using 'CTRL-@' or CTRL-\, , you can change some or all
+    " of these maps to use other keys.  One likely candidate is 'CTRL-_'
+    " (which also maps to CTRL-/, which is easier to type).  By default it is
+    " used to switch between Hebrew and English keyboard mode.
+    "
+    " All of the maps involving the <cfile> macro use '^<cfile>$': this is so
+    " that searches over '#include <time.h>" return only references to
+    " 'time.h', and not 'sys/time.h', etc. (by default cscope will return all
+    " files that contain 'time.h' as part of their name).
+
+
+    " To do the first type of search, hit 'CTRL-\', followed by one of the
+    " cscope search types above (s,g,c,t,e,f,i,d).  The result of your cscope
+    " search will be displayed in the current window.  You can use CTRL-T to
+    " go back to where you were before the search.  
+    "
+
+    nmap <C-\>s :cs find s <C-R>=expand("<cword>")<CR><CR>  
+    nmap <C-\>g :cs find g <C-R>=expand("<cword>")<CR><CR>  
+    nmap <C-\>c :cs find c <C-R>=expand("<cword>")<CR><CR>  
+    nmap <C-\>t :cs find t <C-R>=expand("<cword>")<CR><CR>  
+    nmap <C-\>e :cs find e <C-R>=expand("<cword>")<CR><CR>  
+    nmap <C-\>f :cs find f <C-R>=expand("<cfile>")<CR><CR>  
+    nmap <C-\>i :cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
+    nmap <C-\>d :cs find d <C-R>=expand("<cword>")<CR><CR>  
+
+
+    " Using 'CTRL-spacebar' (intepreted as CTRL-@ by vim) then a search type
+    " makes the vim window split horizontally, with search result displayed in
+    " the new window.
+    "
+    " (Note: earlier versions of vim may not have the :scs command, but it
+    " can be simulated roughly via:
+    "    nmap <C-@>s <C-W><C-S> :cs find s <C-R>=expand("<cword>")<CR><CR>  
+
+    nmap <C-@>s :scs find s <C-R>=expand("<cword>")<CR><CR> 
+    nmap <C-@>g :scs find g <C-R>=expand("<cword>")<CR><CR> 
+    nmap <C-@>c :scs find c <C-R>=expand("<cword>")<CR><CR> 
+    nmap <C-@>t :scs find t <C-R>=expand("<cword>")<CR><CR> 
+    nmap <C-@>e :scs find e <C-R>=expand("<cword>")<CR><CR> 
+    nmap <C-@>f :scs find f <C-R>=expand("<cfile>")<CR><CR> 
+    nmap <C-@>i :scs find i ^<C-R>=expand("<cfile>")<CR>$<CR>	
+    nmap <C-@>d :scs find d <C-R>=expand("<cword>")<CR><CR> 
+
+
+    " Hitting CTRL-space *twice* before the search type does a vertical 
+    " split instead of a horizontal one (vim 6 and up only)
+    "
+    " (Note: you may wish to put a 'set splitright' in your .vimrc
+    " if you prefer the new window on the right instead of the left
+
+    nmap <C-@><C-@>s :vert scs find s <C-R>=expand("<cword>")<CR><CR>
+    nmap <C-@><C-@>g :vert scs find g <C-R>=expand("<cword>")<CR><CR>
+    nmap <C-@><C-@>c :vert scs find c <C-R>=expand("<cword>")<CR><CR>
+    nmap <C-@><C-@>t :vert scs find t <C-R>=expand("<cword>")<CR><CR>
+    nmap <C-@><C-@>e :vert scs find e <C-R>=expand("<cword>")<CR><CR>
+    nmap <C-@><C-@>f :vert scs find f <C-R>=expand("<cfile>")<CR><CR>	
+    nmap <C-@><C-@>i :vert scs find i ^<C-R>=expand("<cfile>")<CR>$<CR>	
+    nmap <C-@><C-@>d :vert scs find d <C-R>=expand("<cword>")<CR><CR>
+
+
+    """"""""""""" key map timeouts
+    "
+    " By default Vim will only wait 1 second for each keystroke in a mapping.
+    " You may find that too short with the above typemaps.  If so, you should
+    " either turn off mapping timeouts via 'notimeout'.
+    "
+    "set notimeout 
+    "
+    " Or, you can keep timeouts, by uncommenting the timeoutlen line below,
+    " with your own personal favorite value (in milliseconds):
+    "
+    "set timeoutlen=4000
+    "
+    " Either way, since mapping timeout settings by default also set the
+    " timeouts for multicharacter 'keys codes' (like <F1>), you should also
+    " set ttimeout and ttimeoutlen: otherwise, you will experience strange
+    " delays as vim waits for a keystroke after you hit ESC (it will be
+    " waiting to see if the ESC is actually part of a key code like <F1>).
+    "
+    "set ttimeout 
+    "
+    " personally, I find a tenth of a second to work well for key code
+    " timeouts. If you experience problems and have a slow terminal or network
+    " connection, set it higher.  If you don't set ttimeoutlen, the value for
+    " timeoutlent (default: 1000 = 1 second, which is sluggish) is used.
+    "
+    "set ttimeoutlen=100
+
 endif
 
-if !exists('g:cscope_auto_update')
-  let g:cscope_auto_update = 1
-endif
 
-if !exists('g:cscope_open_location')
-  let g:cscope_open_location = 1
-endif
-
-function! s:Echo(msg)
-  if g:cscope_silent == 0
-    echo a:msg
-  endif
-endfunction
-
-if !exists('g:cscope_cmd')
-  if executable('cscope')
-    let g:cscope_cmd = 'cscope'
-  else
-    call <SID>Echo('cscope: command not found')
-    finish
-  endif
-endif
-
-set cscopequickfix=s-,g-,d-,c-,t-,e-,f-,i-
-
-function! s:ClearDBs()
-  cs kill -1
-  let s:dbs = {}
-  call <SID>RmDBfiles()
-  call writefile([], s:index_file)
-endfunction
-com! -nargs=0 CscopeClear call <SID>ClearDBs()
-
-function! s:GetBestPath(dir)
-  let f = substitute(a:dir,'\\','/','g')
-  let bestDir = ""
-  for d in keys(s:dbs)
-    if stridx(f, d) == 0 && len(d) > len(bestDir)
-      let bestDir = d
-    endif
-  endfor
-  return bestDir
-endfunction
-
-function! s:ListDBs()
-  let dirs = keys(s:dbs)
-  if len(dirs) == 0
-    echo "You have no cscope dbs now."
-  else
-    let s = [' ID                   LOADTIMES    PATH']
-    for d in dirs
-      let id = s:dbs[d]['id']
-      if cscope_connection(2, s:cscope_vim_dir.'/'.id.'.db') == 1
-        let l = printf("*%d  %10d            %s", id, s:dbs[d]['loadtimes'], d)
-      else
-        let l = printf(" %d  %10d            %s", id, s:dbs[d]['loadtimes'], d)
-      endif
-      call add(s, l)
-    endfor
-    echo join(s, "\n")
-  endif
-endfunction
-com! -nargs=0 CscopeList call <SID>ListDBs()
-
-if !exists('g:cscope_ignore_files')
-  let g:cscope_ignore_files = '\.3dm$\|\.3g2$\|\.3gp$\|\.7z$\|\.a$\|\.a.out$\|\.accdb$\|\.ai$\|\.aif$\|\.aiff$\|\.app$\|\.arj$\|\.asf$\|\.asx$\|\.au$\|\.avi$\|\.bak$\|\.bin$\|\.bmp$\|\.bz2$\|\.cab$\|\.cer$\|\.cfm$\|\.cgi$\|\.com$\|\.cpl$\|\.csr$\|\.csv$\|\.cue$\|\.cur$\|\.dat$\|\.db$\|\.dbf$\|\.dbx$\|\.dds$\|\.deb$\|\.dem$\|\.dll$\|\.dmg$\|\.dmp$\|\.dng$\|\.doc$\|\.docx$\|\.drv$\|\.dwg$\|\.dxf$\|\.ear$\|\.efx$\|\.eps$\|\.epub$\|\.exe$\|\.fla$\|\.flv$\|\.fnt$\|\.fon$\|\.gadget$\|\.gam$\|\.gbr$\|\.ged$\|\.gif$\|\.gpx$\|\.gz$\|\.hqx$\|\.ibooks$\|\.icns$\|\.ico$\|\.ics$\|\.iff$\|\.img$\|\.indd$\|\.iso$\|\.jar$\|\.jpeg$\|\.jpg$\|\.key$\|\.keychain$\|\.kml$\|\.lnk$\|\.lz$\|\.m3u$\|\.m4a$\|\.max$\|\.mdb$\|\.mid$\|\.mim$\|\.moov$\|\.mov$\|\.movie$\|\.mp2$\|\.mp3$\|\.mp4$\|\.mpa$\|\.mpeg$\|\.mpg$\|\.msg$\|\.msi$\|\.nes$\|\.o$\|\.obj$\|\.ocx$\|\.odt$\|\.otf$\|\.pages$\|\.part$\|\.pct$\|\.pdb$\|\.pdf$\|\.pif$\|\.pkg$\|\.plugin$\|\.png$\|\.pps$\|\.ppt$\|\.pptx$\|\.prf$\|\.ps$\|\.psd$\|\.pspimage$\|\.qt$\|\.ra$\|\.rar$\|\.rm$\|\.rom$\|\.rpm$\|\.rtf$\|\.sav$\|\.scr$\|\.sdf$\|\.sea$\|\.sit$\|\.sitx$\|\.sln$\|\.smi$\|\.so$\|\.svg$\|\.swf$\|\.swp$\|\.sys$\|\.tar$\|\.tar.gz$\|\.tax2010$\|\.tga$\|\.thm$\|\.tif$\|\.tiff$\|\.tlb$\|\.tmp$\|\.toast$\|\.torrent$\|\.ttc$\|\.ttf$\|\.uu$\|\.uue$\|\.vb$\|\.vcd$\|\.vcf$\|\.vcxproj$\|\.vob$\|\.war$\|\.wav$\|\.wma$\|\.wmv$\|\.wpd$\|\.wps$\|\.xll$\|\.xlr$\|\.xls$\|\.xlsx$\|\.xpi$\|\.yuv$\|\.Z$\|\.zip$\|\.zipx$\|\.lib$\|\.res$\|\.rc$\|\.out$\|\.cache$\|\.tgz$\|\.gho$\|\.ghs$'
-endif
-
-if exists('g:cscope_ignore_strict') && g:cscope_ignore_strict == 1
-  let g:cscope_ignore_files = g:cscope_ignore_files.'\|\.xml$\|\.yml$\|\.ini$\|\.conf$\|\.css$\|\.htc$\|\.bat$\|\.sh$\|\.txt$\|\.log$\|\.dtd$\|\.xsd$'
-endif
-
-let s:cscope_vim_dir = substitute($HOME,'\\','/','g')."/.cscope.vim"
-let s:index_file = s:cscope_vim_dir.'/index'
-
-function! s:ListFiles(dir)
-  let d = []
-  let f = []
-  let cwd = a:dir
-  let sl = &l:stl
-  while cwd != ''
-    let a = split(globpath(cwd, "*"), "\n")
-    for fn in a
-      if getftype(fn) == 'dir'
-        call add(d, fn)
-      elseif getftype(fn) != 'file'
-        continue
-      elseif stridx(fn, '.') == -1
-        continue
-      elseif fn =~ g:cscope_ignore_files
-        continue
-      else
-        if stridx(fn, ' ') != -1
-          let fn = '"'.fn.'"'
-        endif
-        call add(f, fn)
-      endif
-    endfor
-    let cwd = len(d) ? remove(d, 0) : ''
-    sleep 1m | let &l:stl = 'Found '.len(f).' files, finding in '.cwd | redrawstatus
-  endwhile
-  sleep 1m | let &l:stl = sl | redrawstatus
-  return f
-endfunction
-
-function! s:RmDBfiles()
-  let odbs = split(globpath(s:cscope_vim_dir, "*"), "\n")
-  for f in odbs
-    call delete(f)
-  endfor
-endfunction
-
-function! s:LoadIndex()
-  let s:dbs = {}
-  if ! isdirectory(s:cscope_vim_dir)
-    call mkdir(s:cscope_vim_dir)
-  elseif filereadable(s:index_file)
-    let idx = readfile(s:index_file)
-    for i in idx
-      let e = split(i, '|')
-      if len(e) == 0
-        call delete(s:index_file)
-        call <SID>RmDBfiles()
-      else
-        let db_file = s:cscope_vim_dir.'/'.e[1].'.db'
-        if filereadable(db_file)
-          if isdirectory(e[0])
-            let s:dbs[e[0]] = {}
-            let s:dbs[e[0]]['id'] = e[1]
-            let s:dbs[e[0]]['loadtimes'] = e[2]
-            let s:dbs[e[0]]['dirty'] = (len(e) > 3) ? e[3] :0
-          else
-            call delete(db_file)
-          endif
-        endif
-      endif
-    endfor
-  else
-    call <SID>RmDBfiles()
-  endif
-endfunction
-call <SID>LoadIndex()
-
-function! s:FlushIndex()
-  let lines = []
-  for d in keys(s:dbs)
-    call add(lines, d.'|'.s:dbs[d]['id'].'|'.s:dbs[d]['loadtimes'].'|'.s:dbs[d]['dirty'])
-  endfor
-  call writefile(lines, s:index_file)
-endfunction
-
-function! s:CheckNewFile(dir, newfile)
-  let id = s:dbs[a:dir]['id']
-  let cscope_files = s:cscope_vim_dir."/".id.".files"
-  let files = readfile(cscope_files)
-  if count(files, a:newfile) == 0
-    call add(files, a:newfile)
-    call writefile(files, cscope_files)
-  endif
-endfunction
-
-function! s:_CreateDB(dir)
-  let id = s:dbs[a:dir]['id']
-  let cscope_files = s:cscope_vim_dir."/".id.".files"
-  if ! filereadable(cscope_files)
-    let files = <SID>ListFiles(a:dir)
-    call writefile(files, cscope_files)
-  endif
-  exec 'cs kill '.s:cscope_vim_dir.'/'.id.'.db'
-  exec 'silent !'.g:cscope_cmd.' -b -i '.cscope_files.' -f'.s:cscope_vim_dir.'/'.id.'.db'
-  let s:dbs[a:dir]['dirty'] = 0
-endfunction
-
-function! s:CheckAbsolutePath(dir, defaultPath)
-  let d = a:dir
-  while 1
-    if !isdirectory(d)
-      echohl WarningMsg | echo "Please input a valid path." | echohl None
-      let d = input("", a:defaultPath, 'dir')
-    elseif (len(d) < 2 || (d[0] != '/' && d[1] != ':'))
-      echohl WarningMsg | echo "Please input an absolute path." | echohl None
-      let d = input("", a:defaultPath, 'dir')
-    else
-      break
-    endif
-  endwhile
-  let d = substitute(d,'\\','/','g')
-  let d = substitute(d,'/\+$','','')
-  return d
-endfunction
-
-function! s:InitDB(dir)
-  let id = localtime()
-  let s:dbs[a:dir] = {}
-  let s:dbs[a:dir]['id'] = id
-  let s:dbs[a:dir]['loadtimes'] = 0
-  let s:dbs[a:dir]['dirty'] = 0
-  call <SID>_CreateDB(a:dir)
-  call <SID>FlushIndex()
-endfunction
-
-function! s:LoadDB(dir)
-  exe 'cs add '.s:cscope_vim_dir.'/'.s:dbs[a:dir]['id'].'.db'
-  let s:dbs[a:dir]['loadtimes'] = s:dbs[a:dir]['loadtimes']+1
-  call <SID>FlushIndex()
-endfunction
-
-function! s:AutoloadDB(dir)
-  let m_dir = <SID>GetBestPath(a:dir)
-  if m_dir == ""
-    echohl WarningMsg | echo "Can not find proper cscope db, please input a path to generate cscope db for." | echohl None
-    let m_dir = input("", a:dir, 'dir')
-    if m_dir != ''
-      let m_dir = <SID>CheckAbsolutePath(m_dir, a:dir)
-      call <SID>InitDB(m_dir)
-      call <SID>LoadDB(m_dir)
-    endif
-  else
-    let id = s:dbs[m_dir]['id']
-    if cscope_connection(2, s:cscope_vim_dir.'/'.id.'.db') == 0
-      call <SID>LoadDB(m_dir)
-    endif
-  endif
-endfunction
-
-function! s:PreloadDB()
-  let dirs = split(g:cscope_preload_path, ';')
-  for m_dir in dirs
-    let m_dir = <SID>CheckAbsolutePath(m_dir, m_dir)
-    if has_key(s:dbs, m_dir)
-      call <SID>_CreateDB(m_dir)
-    else
-      call <SID>InitDB(m_dir)
-    endif
-    call <SID>LoadDB(m_dir)
-  endfor
-endfunction
-if exists('g:cscope_preload_path')
-  call <SID>PreloadDB()
-endif
-
-function! ToggleLocationList()
-  let l:own = winnr()
-  lw
-  let l:cwn = winnr()
-  if(l:cwn == l:own)
-    if &buftype == 'quickfix'
-      lclose
-    elseif len(getloclist(winnr())) > 0
-      lclose
-    else
-      echohl WarningMsg | echo "No location list." | echohl None
-    endif
-  endif
-endfunction
-
-function! cscope#find(action, word)
-  let dirtyDirs = []
-  for d in keys(s:dbs)
-    if s:dbs[d]['dirty'] == 1
-      call add(dirtyDirs, d)
-    endif
-  endfor
-  if len(dirtyDirs) > 0
-    call <SID>updateDBs(dirtyDirs)
-  endif
-  call <SID>AutoloadDB(expand('%:p:h'))
-  try
-    exe ':lcs f '.a:action.' '.a:word
-    if g:cscope_open_location == 1
-      lw
-    endif
-  catch
-    echohl WarningMsg | echo 'Can not find '.a:word.' with querytype as '.a:action.'.' | echohl None
-  endtry
-endfunction
-
-function! cscope#findInteractive(pat)
-    call inputsave()
-    let qt = input("\nChoose a querytype for '".a:pat."'(:help cscope-find)\n  c: functions calling this function\n  d: functions called by this function\n  e: this egrep pattern\n  f: this file\n  g: this definition\n  i: files #including this file\n  s: this C symbol\n  t: this text string\n\n  or\n  <querytype><pattern> to query `pattern` instead of '".a:pat."' as `querytype`, Ex. `smain` to query a C symbol named 'main'.\n> ")
-    call inputrestore()
-    if len(qt) > 1
-        call cscope#find(qt[0], qt[1:])
-    else
-        call cscope#find(qt, a:pat)
-    endif
-    call feedkeys("\<CR>")
-endfunction
-
-function! s:OnChange()
-  if expand('%:t') !~ g:cscope_ignore_files
-    let m_dir = <SID>GetBestPath(expand('%:p:h'))
-    if m_dir != ""
-      let s:dbs[m_dir]['dirty'] = 1
-      call <SID>FlushIndex()
-      call <SID>CheckNewFile(m_dir, expand('%:p'))
-      redraw
-      call <SID>Echo('Your cscope db will be updated automatically, you can turn off this message by setting g:cscope_silent 1.')
-    endif
-  endif
-endfunction
-if g:cscope_auto_update == 1
-  au BufWritePost * call <SID>OnChange()
-endif
-
-function! s:updateDBs(dirs)
-  for d in a:dirs
-    call <SID>_CreateDB(d)
-  endfor
-  call <SID>FlushIndex()
-  cs reset
-endfunction
-
-function! cscope#updateDB()
-  call <SID>updateDBs(keys(s:dbs))
-endfunction
-
-nnoremap <leader>fa :call cscope#findInteractive(expand('<cword>'))<CR>
-nnoremap <leader>l :call ToggleLocationList()<CR>
-" s: Find this C symbol
-nnoremap  <leader>fs :call cscope#find('s', expand('<cword>'))<CR>
-" g: Find this definition
-nnoremap  <leader>fg :call cscope#find('g', expand('<cword>'))<CR>
-" d: Find functions called by this function
-nnoremap  <leader>fd :call cscope#find('d', expand('<cword>'))<CR>
-" c: Find functions calling this function
-nnoremap  <leader>fc :call cscope#find('c', expand('<cword>'))<CR>
-" t: Find this text string
-nnoremap  <leader>ft :call cscope#find('t', expand('<cword>'))<CR>
-" e: Find this egrep pattern
-nnoremap  <leader>fe :call cscope#find('e', expand('<cword>'))<CR>
-" f: Find this file
-nnoremap  <leader>ff :call cscope#find('f', expand('<cword>'))<CR>
-" i: Find files #including this file
-nnoremap <leader>fi :call cscope#find('i', expand('<cword>'))<CR>
